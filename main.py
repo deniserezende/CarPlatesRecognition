@@ -2,8 +2,9 @@ import os
 import cv2
 import numpy as np
 import re
-# from PIL import Image
-# import pytesseract
+import pytesseract
+
+pytesseract.pytesseract.tesseract_cmd = r'c:/users/laura/appdata/local/packages/pythonsoftwarefoundation.python.3.10_qbz5n2kfra8p0/localcache/local-packages/python310/site-packages'
 
 
 def get_image():
@@ -104,7 +105,7 @@ def detect_plates(image):
     cv2.destroyAllWindows()
 
 
-def is_plate(contour):
+"""def is_plate(contour):
     # Calcule o retângulo delimitador do contorno
     x, y, w, h = cv2.boundingRect(contour)
 
@@ -113,7 +114,25 @@ def is_plate(contour):
 
     # Verifique se a relação entre altura e largura atende à condição de placa
     return h < w and h / w > min_aspect_ratio
+    """
+def is_plate(image, contour):
+    # Calculate the bounding rectangle of the contour
+    x, y, w, h = cv2.boundingRect(contour)
 
+    # Crop the region of interest (ROI) from the image using the bounding rectangle
+    roi = image[y:y+h, x:x+w]
+
+    # Convert the cropped region to grayscale
+    #gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+
+    # Use Tesseract OCR to extract text from the cropped region
+    text = pytesseract.image_to_string(roi, config='--psm 8')
+
+    # Check if the extracted text contains letters or numbers
+    if any(c.isalpha() or c.isdigit() for c in text):
+        return True
+    else:
+        return False
 
 def find_license_plate(image_original):
 
@@ -133,7 +152,7 @@ def find_license_plate(image_original):
         approx = cv2.approxPolyDP(contour, epsilon, True)
 
         # Verificar se o contorno representa uma placa
-        if is_plate(approx):
+        if is_plate(image, approx):
             # Desenhar a caixa delimitadora ao redor da placa
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(image_original, (x, y), (x + w, y + h), (0, 255, 0), 2)
