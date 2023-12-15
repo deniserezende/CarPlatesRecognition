@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+import re
 # from PIL import Image
 # import pytesseract
 
@@ -47,7 +48,7 @@ def pre_processing(imagem):
     # Pode ser feito através de equalização do histograma
     imagem_gray = cv2.cvtColor(imagem_ruido, cv2.COLOR_RGB2GRAY)
     imagem_equalizada = cv2.equalizeHist(imagem_gray)
-    # imagem_equalizada=binary_quantize(imagem_equalizada)
+    imagem_equalizada=binary_quantize(imagem_equalizada)
 
     # Equalização de Histograma
     # Pode ser feita diretamente na imagem colorida ou em cada canal separadamente
@@ -56,12 +57,11 @@ def pre_processing(imagem):
     imagem_equalizada_dois = cv2.merge(equalizados)
 
     # Exibir as imagens resultantes (para análise visual)
-    cv2.imshow('Imagem Original', imagem)
-    cv2.imshow('Imagem com Contraste Ajustado', imagem_contraste)
-    cv2.imshow('Imagem com Redução de Ruídos', imagem_ruido)
+    #cv2.imshow('Imagem Original', imagem)
+    #cv2.imshow('Imagem com Contraste Ajustado', imagem_contraste)
+    #cv2.imshow('Imagem com Redução de Ruídos', imagem_ruido)
     cv2.imshow('Imagem com Realce de Histograma', imagem_equalizada_dois)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    
     return imagem_equalizada_dois
 
 
@@ -104,8 +104,69 @@ def detect_plates(image):
     cv2.destroyAllWindows()
 
 
+def is_plate(contour):
+    # Calcule o retângulo delimitador do contorno
+    x, y, w, h = cv2.boundingRect(contour)
 
+    # Defina uma relação mínima entre altura e largura para considerar como placa
+    min_aspect_ratio = 0.5
+
+    # Verifique se a relação entre altura e largura atende à condição de placa
+    return h < w and h / w > min_aspect_ratio
+
+
+def find_license_plate(image_original):
+
+    # Pré-processamento da imagem
+    image = pre_processing(image_original)
+
+    # Detecção de bordas usando Canny
+    edges = cv2.Canny(image, 50, 150)
+
+    # Encontrar contornos na imagem
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Iterar sobre os contornos
+    for contour in contours:
+        # Ajuste de polígono para o contorno
+        epsilon = 0.02 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        # Verificar se o contorno representa uma placa
+        if is_plate(approx):
+            # Desenhar a caixa delimitadora ao redor da placa
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(image_original, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        else:
+            print("Contorno descartado. Não representa uma placa.")
+
+    # Exibir a imagem resultante
+    cv2.imshow("License Plate Detection", image_original)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+  
 image = get_image()
-pre_proceed_image = pre_processing(image)
-detect_plates(pre_proceed_image)
+find_license_plate(image)
 
+
+"""def detect_license_plate(rectangle_text):
+    # Padrão de placa de veículo brasileira (exemplo, adapte conforme necessário)
+    license_plate_pattern = re.compile(r'^[A-Z]{3}\d{4}$')
+
+    # Verificar se o texto dentro do retângulo corresponde ao padrão da placa de veículo
+    match = license_plate_pattern.match(rectangle_text)
+
+    # Se houver correspondência, é uma placa de veículo
+    if match:
+        return True
+    else:
+        return False
+# Exemplo de uso
+rectangle_text = "ABC1234"
+result = detect_license_plate(rectangle_text)
+
+if result:
+    print("Placa de veículo detectada!")
+else:
+    print("Não é uma placa de veículo.")"""
