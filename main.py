@@ -34,35 +34,15 @@ def binary_quantize(image):
 
 def pre_processing(imagem):
     contraste = cv2.multiply(imagem, np.array([0.8]))    #ajuste de contraste
-    gray = cv2.cvtColor(contraste, cv2.COLOR_BGR2GRAY)                          #escala de cinza
-    blur = cv2.GaussianBlur(gray, (3,3), 0)                                 #redução de ruídos
-    equalizada = cv2.equalizeHist(blur)                       #equalização de histograma (realce)
-    binary = binary_quantize(equalizada)                                          #binarização
-    blur = cv2.GaussianBlur(binary, (3,3), 0)                                 #redução de ruídos
-    #thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-    #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-    #opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
-    #invert = 255 - opening
+    gray = cv2.cvtColor(contraste, cv2.COLOR_BGR2GRAY)   #escala de cinza
+    blur = cv2.GaussianBlur(gray, (3,3), 0)              #redução de ruídos
+    equalizada = cv2.equalizeHist(blur)                  #equalização de histograma (realce)
+    binary = binary_quantize(equalizada)                 #binarização
+    blur = cv2.GaussianBlur(binary, (3,3), 0)            #redução de ruídos
     
     cv2.imshow('Imagem tratada', blur)
     
     return blur
-
-    
-    contraste_fator = 0.3
-    imagem_contraste = cv2.multiply(imagem, np.array([contraste_fator]))    #ajuste de contraste
-    imagem_ruido = cv2.GaussianBlur(imagem_contraste, (5, 5), 0)            
-    imagem_gray = cv2.cvtColor(imagem_ruido, cv2.COLOR_RGB2GRAY)
-    imagem_equalizada = cv2.equalizeHist(imagem_gray)                       #equalização de histograma (realce)
-    imagem_equalizada = binary_quantize(imagem_equalizada)
-    
-    quadro1 = np.concatenate([imagem, imagem_contraste, imagem_ruido], axis=1)
-    quadro2 = np.concatenate([imagem_gray, imagem_equalizada], axis=1)
-
-    #cv2.imshow('Imagens original, com contraste, com red de ruido', quadro1)
-    #cv2.imshow('Imagens cinza e equalizada', quadro2)
-    
-    return imagem_equalizada
 
 def is_plate(image, contour):
     
