@@ -9,7 +9,7 @@ import pytesseract
 def get_image():
     folder = 'conjunto-de-dados'
     absolute_path = os.path.abspath(folder)
-    png_files = [file for file in os.listdir(absolute_path) if file.endswith('.png')]   #recuperando todos os arquivos .png da pasta conjunto-de-dados
+    png_files = [file for file in os.listdir(absolute_path) if file.endswith('.png') or file.endswith('.jpg') or file.endswith('.jpeg')]   #recuperando todos os arquivos .png da pasta conjunto-de-dados
 
     print("\nConjunto de dados:")
     i = 0
@@ -80,8 +80,6 @@ def find_valid_plates(possible_plates):
         while idx < len(plate) and plate[idx].isdigit() and len(next_two_digits) < 2:
             next_two_digits += plate[idx]
             idx += 1
-
-        
         
         # Verifica se a placa atende aos critérios
         if (
@@ -122,15 +120,6 @@ def generate_possible_plates(plate_text, max_substitutions=2):
 
     return possible_plates
 
-def is_brazilian_license_plate(text):
-    # Padrão para placas brasileiras:
-    brazilian_plate_pattern_mercosul = re.compile(r'^[A-Z]{3}-?\d{1}^[A-Z]{1}\d{2}')
-    
-    # Padrão para o sistema anterior com três letras e quatro números
-    brazilian_plate_pattern_anterior = re.compile(r'^[A-Z]{3}-?\d{4}$')
-
-    return bool(brazilian_plate_pattern_mercosul.match(text)) or bool(brazilian_plate_pattern_anterior.match(text))
-
 def is_plate(image, contour):
     x, y, w, h = cv2.boundingRect(contour)                      #retângulo delimitador do contorno
 
@@ -147,20 +136,6 @@ def is_plate(image, contour):
     result = pytesseract.image_to_string(roi, config=custom_config, output_type=pytesseract.Output.DICT)
     possible_plate = result['text'].strip()
     first_seven_characters = possible_plate[:7]
-    
-    # # IMPRIMIR OS QUADRADOS
-    # h, w = roi.shape[:2]
-    # boxes = pytesseract.image_to_boxes(roi, config=custom_config)
-
-    # for b in boxes.splitlines():
-    #     b = b.split()
-    #     char_x, char_y, char_w, char_h = int(b[1]), h - int(b[2]), int(b[3]), h - int(b[4])
-    #     cv2.rectangle(roi, (char_x, char_y), (char_w, char_h), (0, 255, 0), 2)
-
-    # # Display the image with bounding boxes
-    # cv2.imshow('Character Boxes', roi)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
     
     if len(possible_plate) >= 7 and '\n' not in possible_plate:
         print(f"Read from image={possible_plate}")
