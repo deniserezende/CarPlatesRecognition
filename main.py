@@ -130,7 +130,7 @@ def is_plate(image, contour):
         return False
 
     # OCR
-    roi = image[y:y+h, x:x+w] # recorta a região de interessa
+    roi = image[y:y+h, x:x+w] # recorta a região de interesse
     custom_config = r'--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 --oem 3'
     result = pytesseract.image_to_string(roi, config=custom_config, output_type=pytesseract.Output.DICT)
     possible_plate = result['text'].strip()
